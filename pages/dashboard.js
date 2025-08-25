@@ -60,7 +60,15 @@ export default function Dashboard(){
     </div>
 
     <div className="container section">
-      {error && <div className="card" style={{borderColor:'rgba(248,113,113,.35)'}}><p className="bad"><b>Erro:</b> {error}</p><p className="small">Dica: confirma que o Realtime Database está ativo e tem o nó <code>subscriptions/{{user && user.email && user.email.replace('.', ',')}}</code>.</p></div>}
+      {error && (
+        <div className="card" style={{borderColor:'rgba(248,113,113,.35)'}}>
+          <p className="bad"><b>Erro:</b> {error}</p>
+          <p className="small">
+            Dica: confirma que o Realtime Database está ativo e tens o nó
+            <code> subscriptions/&lt;o_teu_email_sem_pontos&gt; </code>.
+          </p>
+        </div>
+      )}
       <h2 className="h2">Dashboard</h2>
       <div className="card">
         <p>Estado da subscrição: {subActive ? <b className="ok">Ativa</b> : <b className="bad">Inativa</b>}</p>
