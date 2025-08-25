@@ -1,8 +1,7 @@
-
 {
   "name": "nextflow-ai",
-  "private": true,
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -11,10 +10,13 @@
   "dependencies": {
     "firebase": "^10.13.2",
     "firebase-admin": "^12.6.0",
+    "micro": "^10.0.1",
     "next": "14.2.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "stripe": "^16.6.0",
-    "micro": "^10.0.1"
+    "stripe": "^16.6.0"
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
