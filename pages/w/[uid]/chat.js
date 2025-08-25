@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { getDatabase, ref, onValue } from 'firebase/database';
-import { app } from '../../lib/firebaseClient';
+import { app } from '../../../lib/firebaseClient';
 
 export default function PublicChat(){
   const { query } = useRouter();
