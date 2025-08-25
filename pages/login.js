@@ -26,9 +26,9 @@ export default function Login(){
       <div className="title">Entrar</div>
       <form onSubmit={handleLogin}>
         <label className="small">Email</label>
-        <input className="input" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--stroke);background:rgba(2,6,23,.4);color:var(--text)" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/>
+        <input className="input" style={{width:"100%",padding:"10px",borderRadius:"10px",border:"1px solid var(--stroke)",background:"rgba(2,6,23,.4)",color:"var(--text)"}} type="email" value={email} onChange={e=>setEmail(e.target.value)} required/>
         <label className="small" style={{marginTop:8}}>Password</label>
-        <input className="input" style="width:100%;padding:10px;border-radius:10px;border:1px solid var(--stroke);background:rgba(2,6,23,.4);color:var(--text)" type="password" value={password} onChange={e=>setPassword(e.target.value)} required/>
+        <input className="input" style={{width:"100%",padding:"10px",borderRadius:"10px",border:"1px solid var(--stroke)",background:"rgba(2,6,23,.4)",color:"var(--text)"}} type="password" value={password} onChange={e=>setPassword(e.target.value)} required/>
         {error && <p style={{color:'#fecaca'}}>{error}</p>}
         <button className="btn" type="submit" style={{marginTop:10}}>Entrar</button>
       </form>
