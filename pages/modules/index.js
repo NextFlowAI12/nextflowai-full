@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { app } from '../../lib/firebaseClient';
@@ -12,41 +11,28 @@ export default function Modules(){
   if(!user) return <div className="container"><p>Precisas de fazer login.</p></div>;
   return (
     <div className="container section">
-      <div className="nav-inner" style={{marginBottom:16}}>
+      <div className="toolbar">
         <a href="/" className="btn ghost">← Voltar</a>
+        <div className="spacer" />
+        <span className="badge ok">{user.email}</span>
       </div>
       <h2 className="h2">Módulos</h2>
-      <div className="grid grid-3">
-        <div className="card">
-          <div className="title">Chatbot de Atendimento</div>
-          <p className="small">Configura FAQs, horários, morada e contacto. Gera um link/iframe para o teu site.</p>
-          <a className="btn" href="/modules/chatbot">Abrir</a>
-        </div>
-        <div className="card">
-          <div className="title">Captação de Leads</div>
-          <p className="small">Gera um formulário partilhável. Leads ficam guardadas e podes exportar.</p>
-          <a className="btn" href="/modules/leads">Abrir</a>
-        </div>
-        <div className="card">
-          <div className="title">Marcações & Reservas</div>
-          <p className="small">Mostra o teu Calendly/Google Calendar embed numa página pública.</p>
-          <a className="btn" href="/modules/bookings">Abrir</a>
-        </div>
-        <div className="card">
-          <div className="title">Automação Operacional</div>
-          <p className="small">Emails, lembretes de pagamento, rascunhos de fatura e atualização de sheets.</p>
-          <a className="btn" href="/modules/automations">Abrir</a>
-        </div>
-        <div className="card">
-          <div className="title">Integrações</div>
-          <p className="small">WhatsApp, Gmail, Google Sheets, Meta, WordPress, Shopify e mais.</p>
-          <a className="btn" href="/modules/integrations">Abrir</a>
-        </div>
-        <div className="card">
-          <div className="title">Formação & Suporte</div>
-          <p className="small">Documentação simples e suporte por email/WhatsApp.</p>
-          <a className="btn" href="/modules/support">Abrir</a>
-        </div>
+      <p className="small" style={{marginTop:-6}}>Escolhe um módulo para configurar e publica-o com 1 clique.</p>
+      <div className="grid grid-3" style={{marginTop:12}}>
+        {[
+          ['🤖','Chatbot de Atendimento','Configura FAQs, horários, morada e contacto. Gera link/iframe.','/modules/chatbot'],
+          ['🎯','Captação de Leads','Formulário partilhável com inbox e export.','/modules/leads'],
+          ['📆','Marcações & Reservas','Liga o teu Calendly/Google Calendar, com link/iframe.','/modules/bookings'],
+          ['⚙️','Automação Operacional','Emails, lembretes, rascunhos de fatura, sheets.','/modules/automations'],
+          ['🔌','Integrações','WhatsApp, Gmail, Sheets, Meta, WordPress, Shopify.','/modules/integrations'],
+          ['📚','Formação & Suporte','Guias rápidos e contacto.','/modules/support'],
+        ].map((c,i)=>(
+          <a key={i} className="card" href={c[3]} style={{textDecoration:'none'}}>
+            <div className="title"><span className="kicker">{c[0]} Requer plano ativo</span>{c[1]}</div>
+            <p className="small" style={{color:'#cbd5e1'}}>{c[2]}</p>
+            <div className="actions" style={{marginTop:8}}><span className="btn small">Abrir</span></div>
+          </a>
+        ))}
       </div>
     </div>
   );
