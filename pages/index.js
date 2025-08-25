@@ -1,4 +1,3 @@
-
 import Link from 'next/link';
 export default function Home(){
   return (
@@ -59,9 +58,9 @@ export default function Home(){
         <h2 className="h2">Planos simples</h2>
         <div className="grid grid-3">
           {[
-            {t:'Starter',p:'€99/mês',k:'STARTER',feats:['Chatbot básico','Leads por email','Integração simples']},
-            {t:'Pro',p:'€299/mês',k:'PRO',feats:['Chatbot avançado','Leads → CRM/WhatsApp','Marcações & Reservas','Automações core']},
-            {t:'Business',p:'€699/mês',k:'BUSINESS',feats:['Tudo do Pro','Integrações custom','SLA & suporte prioritário']},
+            {t:'Starter',p:'€80/mês',k:'STARTER',feats:['Chatbot básico','Leads por email','Integração simples']},
+            {t:'Pro',p:'€150/mês',k:'PRO',feats:['Chatbot avançado','Leads → CRM/WhatsApp','Marcações & Reservas','Automações core']},
+            {t:'Business',p:'€300/mês',k:'BUSINESS',feats:['Tudo do Pro','Integrações custom','SLA & suporte prioritário']},
           ].map((pl,idx)=>(
             <div key={idx} className={"card plan " + (pl.t==='Pro'?'pro':'')}>
               {pl.t==='Pro' && <div className="ribbon">Mais escolhido</div>}
