@@ -1,26 +1,35 @@
-
 import { useEffect, useState } from 'react';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-import { app, db } from '../lib/firebaseClient';
-import { doc, getDoc } from 'firebase/firestore';
+import { app } from '../lib/firebaseClient';
+import { getDatabase, ref, child, get } from 'firebase/database';
 
 export default function Dashboard(){
   const [user,setUser] = useState(null);
   const [subActive,setSubActive] = useState(false);
   const [loading,setLoading] = useState(true);
+  const [error,setError] = useState('');
 
   useEffect(()=>{
     const auth = getAuth(app);
     const unsub = onAuthStateChanged(auth, async (u)=>{
-      if(u){
-        setUser(u);
-        const ref = doc(db,'subscriptions', u.email);
-        const snap = await getDoc(ref);
-        setSubActive(snap.exists() && snap.data().active === true);
-      } else {
-        setUser(null);
+      try{
+        if(u){
+          setUser(u);
+          const db = getDatabase(app);
+          const key = u.email.replace(/\./g, ','); // RTDB não aceita pontos no ID
+          const snap = await get(child(ref(db), `subscriptions/${key}`));
+          setSubActive(snap.exists() && snap.val().active === true);
+        } else {
+          setUser(null);
+          setSubActive(false);
+        }
+      }catch(e){
+        console.error('Erro RTDB:', e);
+        setError(e?.message || 'Falha ao verificar a subscrição');
+        setSubActive(false);
+      }finally{
+        setLoading(false);
       }
-      setLoading(false);
     });
     return ()=>unsub();
   },[]);
@@ -49,7 +58,9 @@ export default function Dashboard(){
         </div>
       </div>
     </div>
+
     <div className="container section">
+      {error && <div className="card" style={{borderColor:'rgba(248,113,113,.35)'}}><p className="bad"><b>Erro:</b> {error}</p><p className="small">Dica: confirma que o Realtime Database está ativo e tem o nó <code>subscriptions/{{user && user.email && user.email.replace('.', ',')}}</code>.</p></div>}
       <h2 className="h2">Dashboard</h2>
       <div className="card">
         <p>Estado da subscrição: {subActive ? <b className="ok">Ativa</b> : <b className="bad">Inativa</b>}</p>
@@ -61,6 +72,7 @@ export default function Dashboard(){
           </div>
         )}
       </div>
+
       <h3 className="h2" style={{marginTop:18}}>Funcionalidades</h3>
       {!subActive && <p className="small bad">precisas de pagar antes de usar o serviço</p>}
       <div className="grid grid-3" style={{opacity: subActive?1:.6}}>

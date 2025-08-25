@@ -1,7 +1,6 @@
-
 import { buffer } from 'micro';
 import Stripe from 'stripe';
-import { getAdminDb } from '../../lib/firebaseAdmin';
+import { getAdminRTDB } from '../../lib/firebaseAdmin';
 
 export const config = { api: { bodyParser: false } };
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -24,14 +23,15 @@ export default async function handler(req,res){
     const session = event.data.object;
     const email = session.customer_email || (session.customer_details && session.customer_details.email);
     if(email){
-      const db = getAdminDb();
-      await db.collection('subscriptions').doc(email).set({
+      const key = email.replace(/\./g, ','); // usar o mesmo encoding do dashboard
+      const rtdb = getAdminRTDB();
+      await rtdb.ref(`subscriptions/${key}`).update({
         active: true,
         plan: 'STARTER',
         updatedAt: new Date().toISOString(),
         stripeCustomer: session.customer,
         sessionId: session.id
-      }, { merge: true });
+      });
     }
   }
 
