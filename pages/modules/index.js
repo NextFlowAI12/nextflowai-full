@@ -1,7 +1,6 @@
 import React from 'react';
 export default function Modules(){
   const [user,setUser] = React.useState(null);
-
   React.useEffect(()=>{
     let unsub;
     (async ()=>{
@@ -11,7 +10,6 @@ export default function Modules(){
     })();
     return ()=>{ if(unsub) unsub(); };
   },[]);
-
   if(!user) return <div className="container"><p>Precisas de fazer login.</p></div>;
   return (
     <div className="container section">

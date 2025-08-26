@@ -3,7 +3,6 @@ export default function Bookings(){
   const [user,setUser] = React.useState(null);
   const [url,setUrl] = React.useState('');
   const [saved,setSaved] = React.useState(false);
-
   React.useEffect(()=>{
     let unsub;
     (async ()=>{
@@ -21,19 +20,16 @@ export default function Bookings(){
     })();
     return ()=>{ if(unsub) unsub(); };
   },[]);
-
   async function save(){
     const { app } = await import('../../lib/firebaseClient');
     const { getDatabase, ref, set } = await import('firebase/database');
     await set(ref(getDatabase(app), `widgets/${user.uid}/calendly`), { url });
     setSaved(true); setTimeout(()=>setSaved(false), 1200);
   }
-
   if(!user) return <div className="container"><p>Precisas de fazer login.</p></div>;
   const origin = typeof window!=='undefined' ? window.location.origin : '';
   const publicUrl = `${origin}/w/${user.uid}/book`;
   const iframe = `<iframe src="${publicUrl}" style="width:100%;height:800px;border:0;border-radius:12px"></iframe>`;
-
   return (<div className="container section">
     <h2 className="h2">Marcações & Reservas</h2>
     <div className="grid grid-2">

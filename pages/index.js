@@ -3,7 +3,7 @@ export default function Home(){
     <div className="container section">
       <div className="card">
         <div className="title">NextFlow AI</div>
-        <p className="small">Homepage carregada com sucesso. Usa os atalhos abaixo.</p>
+        <p className="small">Homepage carregada com sucesso. Atalhos rápidos:</p>
         <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
           <a className="btn" href="/login">Entrar</a>
           <a className="btn" href="/modules">Módulos</a>
