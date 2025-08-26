@@ -1,66 +1,87 @@
 // pages/api/stripe-webhook.js
 export const config = { api: { bodyParser: false } };
 
-async function readRawBody(req){
-  const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
+async function raw(req){
+  const chunks=[]; for await (const c of req) chunks.push(c);
   return Buffer.concat(chunks);
+}
+function mapPriceToPlan(priceId){
+  if (!priceId) return 'starter';
+  if (process.env.NEXT_PUBLIC_PRICE_PRO === priceId) return 'pro';
+  if (process.env.NEXT_PUBLIC_PRICE_BUSINESS === priceId) return 'business';
+  return 'starter';
 }
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).end('Method Not Allowed');
-  const stripe = (await import('stripe')).default(process.env.STRIPE_SECRET_KEY);
-  const whSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  let event;
 
+  const stripe = (await import('stripe')).default(process.env.STRIPE_SECRET_KEY);
+  const body = await raw(req);
+  const whsec = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
   try {
-    if (whSecret) {
-      const raw = await readRawBody(req);
+    if (whsec) {
       const sig = req.headers['stripe-signature'];
-      event = stripe.webhooks.constructEvent(raw, sig, whSecret);
+      event = stripe.webhooks.constructEvent(body, sig, whsec);
     } else {
-      // SEM verificação (apenas para testes). Usa com cuidado.
-      const raw = await readRawBody(req);
-      event = JSON.parse(raw.toString('utf8'));
-      console.warn('⚠ Webhook sem verificação de assinatura. Define STRIPE_WEBHOOK_SECRET para ativar a verificação.');
+      event = JSON.parse(body.toString('utf8'));
+      console.warn('⚠ Webhook sem verificação de assinatura.');
     }
   } catch (err) {
-    console.error('Webhook verification failed', err.message);
+    console.error('webhook_verify_fail', err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   try {
+    const { getAdminRTDB } = await import('../../lib/firebaseAdmin');
+    const db = getAdminRTDB();
+
     const type = event.type;
-    const obj = event.data?.object || {};
+    const obj  = event.data?.object || {};
+    const now  = Date.now();
 
-    const getUidFrom = (o) => o.client_reference_id || o.metadata?.uid || null;
+    // grava debug último evento
+    await db.ref(`__debug/webhook_last`).set({ type, at: now, object: obj });
 
-    if (type === 'checkout.session.completed' || type === 'customer.subscription.created' || type === 'customer.subscription.updated') {
-      const uid = getUidFrom(obj);
-      let planKey = 'starter';
-      try {
-        const items = (obj.items?.data) || (obj.lines?.data) || [];
-        const priceId = items[0]?.price?.id || obj?.plan?.id;
-        if (priceId) {
-          if (process.env.NEXT_PUBLIC_PRICE_PRO === priceId) planKey = 'pro';
-          else if (process.env.NEXT_PUBLIC_PRICE_BUSINESS === priceId) planKey = 'business';
-        }
-      } catch {}
+    async function resolveUid(o){
+      if (o.client_reference_id) return o.client_reference_id;
+      if (o.metadata?.uid) return o.metadata.uid;
+      const customer = o.customer || o.data?.object?.customer || o.customer_id;
+      if (customer) {
+        const snap = await db.ref(`customers/${customer}`).get();
+        if (snap.exists()) return snap.val();
+      }
+      return null;
+    }
 
+    if (type === 'checkout.session.completed') {
+      const uid = await resolveUid(obj);
       if (uid) {
-        const { getAdminRTDB } = await import('../../lib/firebaseAdmin');
-        const rtdb = getAdminRTDB();
-        await rtdb.ref(`subscriptions/${uid}`).set({ active: true, plan: planKey, updatedAt: Date.now() });
-        await rtdb.ref(`widgets/${uid}/chatbot`).update({ name:'Loja', hours:'', address:'', whatsapp:'', faqs:[{},{},{}] });
+        if (obj.customer) await db.ref(`customers/${obj.customer}`).set(uid);
+        let planKey = 'starter';
+        try{
+          const lines = obj?.lines?.data || [];
+          const priceId = lines[0]?.price?.id;
+          planKey = mapPriceToPlan(priceId) || (obj.metadata?.plan) || 'starter';
+        }catch{}
+        await db.ref(`subscriptions/${uid}`).set({ active: true, plan: planKey, updatedAt: now });
+      }
+    }
+
+    if (type === 'customer.subscription.created' || type === 'customer.subscription.updated') {
+      const uid = await resolveUid(obj);
+      if (uid) {
+        const priceId = obj.items?.data?.[0]?.price?.id || obj.plan?.id;
+        const planKey = obj.metadata?.plan || mapPriceToPlan(priceId);
+        await db.ref(`subscriptions/${uid}`).update({ active: true, plan: planKey, updatedAt: now });
       }
     }
 
     if (type === 'customer.subscription.deleted' || type === 'invoice.payment_failed') {
-      const uid = obj.metadata?.uid || null;
+      const uid = await resolveUid(obj);
       if (uid) {
-        const { getAdminRTDB } = await import('../../lib/firebaseAdmin');
-        const rtdb = getAdminRTDB();
-        await rtdb.ref(`subscriptions/${uid}`).update({ active: false, updatedAt: Date.now() });
+        await db.ref(`subscriptions/${uid}`).update({ active: false, updatedAt: now });
       }
     }
 
