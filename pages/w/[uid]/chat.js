@@ -1,31 +1,26 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { getDatabase, ref, onValue } from 'firebase/database';
-import { app } from '../../../lib/firebaseClient';
-
+import React from 'react';
 export default function PublicChat(){
-  const { query } = useRouter();
-  const [data,setData] = useState(null);
-
-  useEffect(()=>{
-    if(!query.uid) return;
-    const db = getDatabase(app);
-    const r = ref(db, `widgets/${query.uid}/chatbot`);
-    const unsub = onValue(r, (snap)=> setData(snap.val() || null));
-    return ()=>unsub();
-  },[query.uid]);
-
-  if(!data) return <div className="container"><p>A carregar…</p></div>;
-
-  return (<div className="container section">
-    <div className="card">
-      <div className="title">{data.name || 'Chatbot'}</div>
-      <p className="small">{data.hours} · {data.address}</p>
-      <div className="card" style={{padding:12, margin:'8px 0'}}>
-        <div className="small" style={{opacity:.8}}>FAQs</div>
-        <ul>{(data.faqs||[]).map((f,i)=>(<li key={i} style={{margin:'6px 0'}}><b>{f.q}</b><div>{f.a}</div></li>))}</ul>
+  const [cfg,setCfg] = React.useState(null);
+  React.useEffect(()=>{
+    let uid;
+    try{ uid = window.location.pathname.split('/')[2]; }catch(e){}
+    (async ()=>{
+      if(!uid) return;
+      const { app } = await import('../../../lib/firebaseClient');
+      const { getDatabase, ref, child, get } = await import('firebase/database');
+      const snap = await get(child(ref(getDatabase(app)), `widgets/${uid}/chatbot`));
+      if(snap.exists()) setCfg(snap.val());
+    })();
+  },[]);
+  if(!cfg) return <div style={{padding:16,fontFamily:'system-ui'}}>A carregar…</div>;
+  return (
+    <div style={{fontFamily:'system-ui',maxWidth:680,margin:'0 auto',padding:16}}>
+      <h3>{cfg.name||'Chatbot'}</h3>
+      <div style={{opacity:.8,marginBottom:8}}>{cfg.hours} {cfg.address? '· '+cfg.address: ''}</div>
+      <div style={{border:'1px solid #ddd',borderRadius:12,padding:12}}>
+        <div style={{opacity:.7,marginBottom:6}}>FAQs</div>
+        {(cfg.faqs||[]).filter(f=>f.q||f.a).map((f,i)=>(<div key={i} style={{margin:'6px 0'}}><b>{f.q}</b><div>{f.a}</div></div>))}
       </div>
-      {data.whatsapp && <a className="btn" href={`https://wa.me/${data.whatsapp.replace(/\D/g,'')}`} target="_blank" rel="noreferrer">Falar no WhatsApp</a>}
     </div>
-  </div>);
+  );
 }

@@ -7,10 +7,21 @@ export default async function handler(req,res){
     const { getAdminRTDB } = await import('../../lib/firebaseAdmin');
     const rtdb = getAdminRTDB();
     const id = Date.now().toString();
-    await rtdb.ref(`leads/${uid}/${id}`).set({
-      name, email, phone: phone||'', message: message||'',
-      ts: Date.now()
-    });
+    const payload = { name, email, phone: phone||'', message: message||'', ts: Date.now() };
+    await rtdb.ref(`leads/${uid}/${id}`).set(payload);
+
+    const hook = process.env.LEAD_WEBHOOK_URL;
+    const key = process.env.LEAD_WEBHOOK_SECRET;
+    if(hook){
+      try{
+        await fetch(hook, {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json', ...(key ? {'X-Api-Key': key} : {}) },
+          body: JSON.stringify({ event:'lead.created', uid, id, ...payload })
+        });
+      }catch(e){ console.error('lead_webhook_error', e); }
+    }
+
     return res.status(200).json({ ok: true });
   }catch(e){
     console.error('lead_api_error', e);
