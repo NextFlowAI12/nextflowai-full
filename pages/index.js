@@ -1,39 +1,24 @@
-import React from 'react';
-
+// pages/index.js
 export default function Home(){
-  const priceRef = React.useRef({ starter: process.env.NEXT_PUBLIC_PRICE_STARTER, pro: process.env.NEXT_PUBLIC_PRICE_PRO, business: process.env.NEXT_PUBLIC_PRICE_BUSINESS });
-
-  async function ensurePrices(){
-    if (priceRef.current.starter && priceRef.current.pro && priceRef.current.business) return priceRef.current;
-    try{
-      const r = await fetch('/api/get-price-ids');
-      const j = await r.json();
-      priceRef.current = { starter: j.starter, pro: j.pro, business: j.business };
-      return priceRef.current;
-    }catch(e){
-      console.error('price_fetch_error', e);
-      return priceRef.current;
-    }
-  }
-
   async function startCheckout(plan) {
-    const prices = await ensurePrices();
-    const priceId = prices[plan];
-    if (!priceId) { alert('ID de preço em falta. Define os Price IDs no Netlify.'); return; }
-
     try {
       const { getAuth } = await import('firebase/auth');
       const { app } = await import('../lib/firebaseClient');
       const uid = getAuth(app).currentUser?.uid;
       if (!uid) return (window.location.href = '/login');
+
       const res = await fetch('/api/create-checkout-session', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ priceId, uid, plan })
+        body: JSON.stringify({ plan, uid })
       });
       const j = await res.json();
       if (res.ok && j.url) window.location.href = j.url;
-      else alert('Não foi possível abrir o checkout.');
+      else if (j?.error === 'missing_price_id_for_plan') {
+        alert('No Netlify: faltam as variáveis do plano ' + plan + ': PRICE_' + plan.toUpperCase() + ' (ou NEXT_PUBLIC_PRICE_' + plan.toUpperCase() + ')');
+      } else {
+        alert('Não foi possível abrir o checkout.');
+      }
     } catch (e) {
       console.error(e); alert('Erro inesperado a abrir o checkout.');
     }
