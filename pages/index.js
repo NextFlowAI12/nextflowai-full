@@ -1,4 +1,32 @@
 export default function Home(){
+  async function startCheckout(plan) {
+    const priceMap = {
+      starter: process.env.NEXT_PUBLIC_PRICE_STARTER,
+      pro: process.env.NEXT_PUBLIC_PRICE_PRO,
+      business: process.env.NEXT_PUBLIC_PRICE_BUSINESS,
+    };
+    if (!priceMap[plan]) {
+      alert('ID de preço em falta. Define NEXT_PUBLIC_PRICE_* no Netlify.');
+      return;
+    }
+    try {
+      const { getAuth } = await import('firebase/auth');
+      const { app } = await import('../lib/firebaseClient');
+      const uid = getAuth(app).currentUser?.uid;
+      if (!uid) return (window.location.href = '/login');
+      const res = await fetch('/api/create-checkout-session', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ priceId: priceMap[plan], uid, plan })
+      });
+      const j = await res.json();
+      if (res.ok && j.url) window.location.href = j.url;
+      else alert('Não foi possível abrir o checkout.');
+    } catch (e) {
+      console.error(e); alert('Erro inesperado a abrir o checkout.');
+    }
+  }
+
   return (
     <>
       <header className="nf-header">
@@ -98,7 +126,7 @@ export default function Home(){
                   <li>Marcações básicas</li>
                   <li>Email/WhatsApp de suporte</li>
                 </ul>
-                <a className="btn wfull" href="/login" data-plan="starter">Escolher Starter</a>
+                <button className="btn wfull" onClick={() => startCheckout('starter')}>Escolher Starter</button>
               </div>
               <div className="card plan featured">
                 <div className="badge">Mais popular</div>
@@ -109,7 +137,7 @@ export default function Home(){
                   <li>Marcações avançadas</li>
                   <li>Integrações Zapier/Make</li>
                 </ul>
-                <a className="btn wfull" href="/login" data-plan="pro">Escolher Pro</a>
+                <button className="btn wfull" onClick={() => startCheckout('pro')}>Escolher Pro</button>
               </div>
               <div className="card plan">
                 <div className="plan-name">Business</div>
@@ -119,7 +147,7 @@ export default function Home(){
                   <li>Onboarding assistido</li>
                   <li>SLAs de suporte</li>
                 </ul>
-                <a className="btn wfull" href="/login" data-plan="business">Escolher Business</a>
+                <button className="btn wfull" onClick={() => startCheckout('business')}>Escolher Business</button>
               </div>
             </div>
             <p className="disclaimer">Cobrança feita via Stripe. Podes cancelar quando quiseres.</p>
