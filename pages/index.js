@@ -1,14 +1,26 @@
+import React from 'react';
+
 export default function Home(){
-  async function startCheckout(plan) {
-    const priceMap = {
-      starter: process.env.NEXT_PUBLIC_PRICE_STARTER,
-      pro: process.env.NEXT_PUBLIC_PRICE_PRO,
-      business: process.env.NEXT_PUBLIC_PRICE_BUSINESS,
-    };
-    if (!priceMap[plan]) {
-      alert('ID de preço em falta. Define NEXT_PUBLIC_PRICE_* no Netlify.');
-      return;
+  const priceRef = React.useRef({ starter: process.env.NEXT_PUBLIC_PRICE_STARTER, pro: process.env.NEXT_PUBLIC_PRICE_PRO, business: process.env.NEXT_PUBLIC_PRICE_BUSINESS });
+
+  async function ensurePrices(){
+    if (priceRef.current.starter && priceRef.current.pro && priceRef.current.business) return priceRef.current;
+    try{
+      const r = await fetch('/api/get-price-ids');
+      const j = await r.json();
+      priceRef.current = { starter: j.starter, pro: j.pro, business: j.business };
+      return priceRef.current;
+    }catch(e){
+      console.error('price_fetch_error', e);
+      return priceRef.current;
     }
+  }
+
+  async function startCheckout(plan) {
+    const prices = await ensurePrices();
+    const priceId = prices[plan];
+    if (!priceId) { alert('ID de preço em falta. Define os Price IDs no Netlify.'); return; }
+
     try {
       const { getAuth } = await import('firebase/auth');
       const { app } = await import('../lib/firebaseClient');
@@ -17,7 +29,7 @@ export default function Home(){
       const res = await fetch('/api/create-checkout-session', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ priceId: priceMap[plan], uid, plan })
+        body: JSON.stringify({ priceId, uid, plan })
       });
       const j = await res.json();
       if (res.ok && j.url) window.location.href = j.url;
@@ -45,7 +57,6 @@ export default function Home(){
       </header>
 
       <main>
-        {/* HERO */}
         <section className="hero">
           <div className="wrap grid2">
             <div className="col">
@@ -74,7 +85,6 @@ export default function Home(){
           </div>
         </section>
 
-        {/* SERVIÇOS */}
         <section id="servicos" className="section">
           <div className="wrap">
             <h2>O que inclui</h2>
@@ -113,7 +123,6 @@ export default function Home(){
           </div>
         </section>
 
-        {/* PLANOS */}
         <section id="planos" className="section planos">
           <div className="wrap">
             <h2>Planos simples, sem complicações</h2>
@@ -154,7 +163,6 @@ export default function Home(){
           </div>
         </section>
 
-        {/* CONTACTO */}
         <section id="contacto" className="section contacto">
           <div className="wrap grid2">
             <div>
