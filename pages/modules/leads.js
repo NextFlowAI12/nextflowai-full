@@ -1,62 +1,35 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { app } from '../../lib/firebaseClient';
-
+import React from 'react';
 export default function Leads(){
-  const [user,setUser] = useState(null);
-  const [tab,setTab] = useState('publicar');
-  const [copied,setCopied] = useState('');
+  const [user,setUser] = React.useState(null);
 
-  const publicUrl = useMemo(()=>{
-    if(typeof window === 'undefined' || !user) return '';
-    return `${window.location.origin}/w/${user.uid}/lead`;
-  },[user]);
-  const iframe = useMemo(()=> publicUrl ? `<iframe src="${publicUrl}" style="width:100%;height:650px;border:0;border-radius:12px"></iframe>` : '', [publicUrl]);
-
-  useEffect(()=>{
-    const unsub = onAuthStateChanged(getAuth(app), setUser);
-    return ()=>unsub();
+  React.useEffect(()=>{
+    let unsub;
+    (async ()=>{
+      const { getAuth, onAuthStateChanged } = await import('firebase/auth');
+      const { app } = await import('../../lib/firebaseClient');
+      unsub = onAuthStateChanged(getAuth(app), setUser);
+    })();
+    return ()=>{ if(unsub) unsub(); };
   },[]);
 
-  function copy(txt,label){
-    if(!txt) return;
-    navigator.clipboard.writeText(txt); setCopied(label);
-    setTimeout(()=>setCopied(''),1000);
-  }
-
   if(!user) return <div className="container"><p>Precisas de fazer login.</p></div>;
+  const origin = typeof window!=='undefined' ? window.location.origin : '';
+  const publicUrl = `${origin}/w/${user.uid}/lead`;
+  const iframe = `<iframe src="${publicUrl}" style="width:100%;height:650px;border:0;border-radius:12px"></iframe>`;
 
   return (<div className="container section">
-    <div className="toolbar">
-      <a className="btn ghost" href="/modules">← Módulos</a>
-      <div className="tabbar">
-        <span className={"tab "+(tab==='publicar'?'active':'')} onClick={()=>setTab('publicar')}>Publicar</span>
-        <a className="tab" href="/modules/leads-inbox">Caixa de entrada</a>
-      </div>
-      <div className="spacer" />
-      <span className="badge pro">Link público</span>
-    </div>
-
-    <div className="grid-tight">
+    <h2 className="h2">Captação de Leads</h2>
+    <div className="grid grid-2">
       <div className="card">
-        <div className="title">Link público</div>
-        <div className="codeblock small mono">{publicUrl || '—'}</div>
-        <div className="actions-row">
-          <button className={"copy "+(copied==='link'?'done':'')} onClick={()=>copy(publicUrl,'link')}>{copied==='link'?'Copiado!':'Copiar link'}</button>
-          <a className="btn secondary" href={publicUrl} target="_blank" rel="noreferrer">Abrir</a>
-        </div>
-        <div className="divider" />
-        <div className="title">Embed (iframe)</div>
-        <div className="codeblock small mono">{iframe || '—'}</div>
-        <div className="actions-row">
-          <button className={"copy "+(copied==='iframe'?'done':'')} onClick={()=>copy(iframe,'iframe')}>{copied==='iframe'?'Copiado!':'Copiar iframe'}</button>
-        </div>
-        <p className="hint">Dica: no WordPress usa o bloco “HTML personalizado”.</p>
+        <div className="title">Publicar</div>
+        <p className="small">Link: <a href={publicUrl} target="_blank" rel="noreferrer">{publicUrl}</a></p>
+        <p className="small">Iframe:</p>
+        <pre style={{whiteSpace:'pre-wrap', background:'rgba(2,6,23,.35)', padding:10, borderRadius:10}}>{iframe}</pre>
+        <a className="btn" href="/modules/leads-inbox">Abrir Inbox</a>
       </div>
-      <div className="preview">
-        <div className="title">Pré‑visualização</div>
-        <iframe src={publicUrl} style={{width:'100%',height:650,border:0,borderRadius:12}} />
-        <p className="note" style={{marginTop:8}}>Submete uma lead para testar e vê em “Caixa de entrada”.</p>
+      <div className="card">
+        <div className="title">Dicas</div>
+        <p className="small">WordPress → bloco “HTML personalizado”.</p>
       </div>
     </div>
   </div>);
