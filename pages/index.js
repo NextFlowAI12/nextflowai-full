@@ -74,8 +74,6 @@ export default function Home(){
           <div>© {new Date().getFullYear()} NextFlow AI</div>
         </div>
       </footer>
-
-      <link rel="stylesheet" href="/styles/home-pro.css" />
     </>
   )
 }
