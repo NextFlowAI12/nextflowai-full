@@ -1,0 +1,13 @@
+.wrap{max-width:960px;margin:0 auto;padding:24px;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;color:#e6ecf3}
+.onboarding h1{margin:0 0 8px;font-size:32px}
+.muted{color:#9aa8ba}
+.small{font-size:13px}
+a{color:#e6ecf3}
+.btn{display:inline-block;padding:12px 16px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#e6ecf3;text-decoration:none}
+.btn.big{padding:14px 18px;font-weight:600}
+.btn.ghost{background:transparent;border-style:dashed}
+.card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px;margin:12px 0}
+.card.warn{border-color:rgba(248,113,113,.35);background:rgba(248,113,113,.07)}
+.actions{display:flex;gap:10px;margin-top:8px;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:800px){.grid2{grid-template-columns:1fr}}
