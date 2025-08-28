@@ -6,7 +6,10 @@ export default function Onboarding(){
   const [loading, setLoading] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [active, setActive] = useState(false);
-  const formBase = process.env.NEXT_PUBLIC_ONBOARDING_FORM_URL || 'https://tally.so/r/w5Qx2r';
+  const [userInfo, setUserInfo] = useState({ uid: '', email: '' });
+
+  // Link do Tally (env ou fallback para o teu link)
+  const formBase = process.env.NEXT_PUBLIC_ONBOARDING_FORM_URL || 'https://tally.so/r/w8XQKr';
 
   useEffect(() => {
     let unsub = () => {};
@@ -17,6 +20,7 @@ export default function Onboarding(){
           import('firebase/database')
         ]);
         const auth = getAuth(app);
+
         unsub = onAuthStateChanged(auth, async (user) => {
           if (!user) {
             setAuthed(false);
@@ -25,22 +29,28 @@ export default function Onboarding(){
             return;
           }
           setAuthed(true);
+          setUserInfo({ uid: user.uid, email: user.email || '' });
+
           const db = getDatabase(app);
           const uid = user.uid;
           const emailKey = user.email ? user.email.replaceAll('.', ',') : null;
           const paths = [
             `subscriptionsByUid/${uid}/active`,
             emailKey ? `subscriptions/${emailKey}/active` : null,
-            `subscriptions/${uid}/active`
+            `subscriptions/${uid}/active`,
+            emailKey ? `subscriptionsByEmail/${emailKey}/active` : null
           ].filter(Boolean);
+
           let isActive = false;
           for (const p of paths) {
-            const snap = await get(ref(db, p));
-            if (snap.exists()) {
-              const val = snap.val();
-              isActive = (val === true) || (val === 'active') || (val && (val.active === true || val.status === 'active'));
-              if (isActive) break;
-            }
+            try {
+              const snap = await get(ref(db, p));
+              if (snap.exists()) {
+                const val = snap.val();
+                isActive = (val === true) || (val === 'active') || (val && (val.active === true || val.status === 'active'));
+                if (isActive) break;
+              }
+            } catch(_) {}
           }
           setActive(isActive);
           setLoading(false);
@@ -68,19 +78,25 @@ export default function Onboarding(){
     </main>
   );
 
-  const email = (typeof window!=='undefined' && window.localStorage.getItem('nf_email')) || '';
-  const uid = (typeof window!=='undefined' && window.localStorage.getItem('nf_uid')) || '';
-  const plano = (typeof window!=='undefined' && window.localStorage.getItem('nf_plan')) || '';
-  const params = new URLSearchParams({ uid, email, plano });
+  // Construir URL do Tally com parâmetros
+  const params = new URLSearchParams({
+    uid: userInfo.uid || '',
+    email: userInfo.email || '',
+    plano: (typeof window!=='undefined' && window.localStorage.getItem('nf_plan')) || ''
+  });
   const formUrl = formBase + (formBase.includes('?') ? '&' : '?') + params.toString();
 
   return (
     <main className="wrap onboarding">
       <h1>Onboarding</h1>
-      <p className="muted">Obrigado! Clica em baixo para preencher o questionário.</p>
+      <p className="muted">Obrigado! Clica no botão para abrir o questionário.</p>
       <div className="card">
-        <a className="btn big" href={formUrl} target="_blank" rel="noreferrer">Abrir questionário</a>
-        <p className="small muted">Se não abrir, usa este link: <a href={formUrl} target="_blank" rel="noreferrer">{formUrl}</a></p>
+        <button className="btn big" onClick={() => window.open(formUrl, '_blank', 'noopener,noreferrer')}>
+          Abrir questionário
+        </button>
+        <p className="small muted" style={{marginTop: 8}}>
+          Se não abrir, usa este link: <a href={formUrl} target="_blank" rel="noreferrer">{formUrl}</a>
+        </p>
       </div>
     </main>
   );
