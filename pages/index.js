@@ -20,13 +20,13 @@ export default function Home(){
             <a href="#features">Funcionalidades</a>
             <a href="#como">Como funciona</a>
             <a href="#planos">Planos</a>
+            <a href="#contactos">Contactos</a>
             <a className="btn small" href="/login">Entrar</a>
           </nav>
         </div>
       </header>
 
       <main>
-        {/* HERO */}
         <section className="hero">
           <div className="glow" />
           <div className="wrap grid2">
@@ -36,7 +36,7 @@ export default function Home(){
               <p className="sub">Chatbots, captação de leads, marcações e integrações — tudo ligado por ti, sem código.</p>
               <div className="cta">
                 <a className="btn primary" href="#planos">Começar agora</a>
-                <a className="btn ghost" href="#features">Ver funcionalidades</a>
+                <a className="btn ghost" href="/onboarding">Onboarding</a>
               </div>
               <ul className="benefits">
                 <li>⚡ Arranque em dias</li>
@@ -71,46 +71,20 @@ export default function Home(){
           </div>
         </section>
 
-        {/* FEATURES */}
         <section id="features" className="section">
           <div className="wrap">
             <h2>Tudo o que precisas</h2>
             <div className="grid3">
-              <div className="card">
-                <div className="ico">💬</div>
-                <h3>Chatbots de Atendimento</h3>
-                <p>Respostas instantâneas, FAQs, horários e passagem a humano.</p>
-              </div>
-              <div className="card">
-                <div className="ico">🎯</div>
-                <h3>Captação de Leads</h3>
-                <p>Formulários inteligentes, qualificação e envio para email/CRM/WhatsApp.</p>
-              </div>
-              <div className="card">
-                <div className="ico">📅</div>
-                <h3>Marcações & Reservas</h3>
-                <p>Integração com Google Calendar, Calendly e sistemas de reservas.</p>
-              </div>
-              <div className="card">
-                <div className="ico">⚙️</div>
-                <h3>Automação Operacional</h3>
-                <p>Emails, lembretes de pagamento, faturas e atualização de sheets.</p>
-              </div>
-              <div className="card">
-                <div className="ico">🔌</div>
-                <h3>Integrações</h3>
-                <p>WhatsApp, Gmail, Google Sheets, Meta, WordPress, Shopify e mais.</p>
-              </div>
-              <div className="card">
-                <div className="ico">📚</div>
-                <h3>Formação & Suporte</h3>
-                <p>Documentação simples e suporte por email/WhatsApp.</p>
-              </div>
+              <div className="card"><div className="ico">💬</div><h3>Chatbots de Atendimento</h3><p>Respostas instantâneas, FAQs, horários e passagem a humano.</p></div>
+              <div className="card"><div className="ico">🎯</div><h3>Captação de Leads</h3><p>Formulários inteligentes, qualificação e envio para email/CRM/WhatsApp.</p></div>
+              <div className="card"><div className="ico">📅</div><h3>Marcações & Reservas</h3><p>Integração com Google Calendar, Calendly e sistemas de reservas.</p></div>
+              <div className="card"><div className="ico">⚙️</div><h3>Automação Operacional</h3><p>Emails, lembretes de pagamento, faturas e atualização de sheets.</p></div>
+              <div className="card"><div className="ico">🔌</div><h3>Integrações</h3><p>WhatsApp, Gmail, Google Sheets, Meta, WordPress, Shopify e mais.</p></div>
+              <div className="card"><div className="ico">📚</div><h3>Formação & Suporte</h3><p>Documentação simples e suporte por email/WhatsApp.</p></div>
             </div>
           </div>
         </section>
 
-        {/* COMO FUNCIONA */}
         <section id="como" className="section steps">
           <div className="wrap">
             <h2>Como funciona</h2>
@@ -122,7 +96,6 @@ export default function Home(){
           </div>
         </section>
 
-        {/* PLANOS */}
         <section id="planos" className="section planos">
           <div className="wrap">
             <h2>Planos simples</h2>
@@ -130,32 +103,20 @@ export default function Home(){
               <div className="card plan">
                 <div className="plan-head"><h3>Starter</h3><span className="pill">Para começar</span></div>
                 <div className="price">€80<span>/mês</span></div>
-                <ul>
-                  <li>1 chatbot + 1 formulário</li>
-                  <li>Marcações básicas</li>
-                  <li>Suporte Email/WhatsApp</li>
-                </ul>
+                <ul><li>1 chatbot + 1 formulário</li><li>Marcações básicas</li><li>Suporte Email/WhatsApp</li></ul>
                 <a className="btn primary wfull" href="/login">Escolher Starter</a>
               </div>
               <div className="card plan featured">
                 <div className="badge">Mais popular</div>
                 <div className="plan-head"><h3>Pro</h3><span className="pill">Crescimento</span></div>
                 <div className="price">€150<span>/mês</span></div>
-                <ul>
-                  <li>3 chatbots + 3 formulários</li>
-                  <li>Marcações avançadas</li>
-                  <li>Integrações Zapier/Make</li>
-                </ul>
+                <ul><li>3 chatbots + 3 formulários</li><li>Marcações avançadas</li><li>Integrações Zapier/Make</li></ul>
                 <a className="btn primary wfull" href="/login">Escolher Pro</a>
               </div>
               <div className="card plan">
                 <div className="plan-head"><h3>Business</h3><span className="pill">Escala</span></div>
                 <div className="price">€300<span>/mês</span></div>
-                <ul>
-                  <li>Tudo do Pro sem limites</li>
-                  <li>Onboarding assistido</li>
-                  <li>SLAs de suporte</li>
-                </ul>
+                <ul><li>Tudo do Pro sem limites</li><li>Onboarding assistido</li><li>SLAs de suporte</li></ul>
                 <a className="btn primary wfull" href="/login">Escolher Business</a>
               </div>
             </div>
@@ -163,13 +124,14 @@ export default function Home(){
           </div>
         </section>
 
-        {/* FAQ */}
-        <section id="faq" className="section faq">
+        <section id="contactos" className="section">
           <div className="wrap">
-            <h2>Perguntas frequentes</h2>
-            <details className="card"><summary>Quanto tempo demora?</summary><p>Normalmente 2–5 dias úteis.</p></details>
-            <details className="card"><summary>Posso usar as minhas contas?</summary><p>Sim, WhatsApp/Gmail/Sheets do cliente.</p></details>
-            <details className="card"><summary>Posso cancelar?</summary><p>Sim, a qualquer momento.</p></details>
+            <h2>Contactos</h2>
+            <div className="grid3">
+              <div className="card"><h3>Telefone</h3><p><a href="tel:+351916053688">+351 916 053 688</a></p></div>
+              <div className="card"><h3>Email</h3><p><a href="mailto:nextflowai12@gmail.com">nextflowai12@gmail.com</a></p></div>
+              <div className="card"><h3>Onboarding</h3><p>Já tens plano ativo? <a className="btn small" href="/onboarding">Abrir questionário</a></p></div>
+            </div>
           </div>
         </section>
       </main>
@@ -180,6 +142,7 @@ export default function Home(){
           <div className="links">
             <a href="/login">Área do cliente</a>
             <a href="#planos">Planos</a>
+            <a href="mailto:nextflowai12@gmail.com">Contacto</a>
           </div>
         </div>
       </footer>
