@@ -17,9 +17,20 @@ function mapPriceToPlan(priceId){
   if (priceId === m.business) return 'business';
   return 'starter';
 }
-async function upsertSub(db, uid, active, plan, extra = {}){
+
+async function upsertSub(db, { uid, email }, active, plan, extra = {}){
   const payload = { active, plan, updatedAt: Date.now(), ...extra };
-  await db.ref(`subscriptions/${uid}`).update(payload);
+  const updates = {};
+  if (uid) {
+    updates[`subscriptions/${uid}`] = payload;
+    updates[`subscriptionsByUid/${uid}`] = payload;
+  }
+  if (email) {
+    const emailKey = email.replaceAll('.', ',');
+    updates[`subscriptions/${emailKey}`] = payload;
+    updates[`subscriptionsByEmail/${emailKey}`] = payload;
+  }
+  await db.ref().update(updates);
   return payload;
 }
 
@@ -41,9 +52,7 @@ export default async function handler(req, res) {
     const { getAdminRTDB } = await import('../../lib/firebaseAdmin');
     const db = getAdminRTDB();
     await db.ref(`__debug/webhook_diag`).set({ ...diag, at: Date.now() });
-  } catch(e) {
-    // ignore, we'll continue
-  }
+  } catch(e) {}
 
   try {
     const stripe = (await import('stripe')).default(process.env.STRIPE_SECRET_KEY);
@@ -58,7 +67,6 @@ export default async function handler(req, res) {
       const sig = req.headers['stripe-signature'];
       event = stripe.webhooks.constructEvent(body, sig, secret);
     } else {
-      // Permite teste mesmo sem secret (não recomendado em produção)
       event = JSON.parse(body.toString('utf8'));
       console.warn('⚠ Webhook sem verificação de assinatura.');
     }
@@ -71,25 +79,28 @@ export default async function handler(req, res) {
 
     await db.ref(`__debug/webhook_last`).set({ type, at: Date.now() });
 
-    async function getUidFromAny(o){
-      if (o.client_reference_id) return o.client_reference_id;
-      if (o.metadata?.uid) return o.metadata.uid;
-      const customer = o.customer || o.customer_id || o.data?.object?.customer;
-      if (customer) {
-        const snap = await db.ref(`customers/${customer}`).get();
-        if (snap.exists()) return snap.val();
+    async function getIdentity(o){
+      let uid = o.client_reference_id || o.metadata?.uid || null;
+      const customerId = o.customer || o.customer_id || o.data?.object?.customer || null;
+
+      if (!uid && customerId) {
+        const snap = await db.ref(`customers/${customerId}`).get();
+        if (snap.exists()) uid = snap.val();
       }
-      return null;
+
+      const email = o.customer_details?.email || o.customer_email || o.receipt_email || o.metadata?.email || null;
+
+      if (uid && customerId) await db.ref(`customers/${customerId}`).set(uid);
+
+      return { uid, email, customerId };
     }
 
     if (type === 'checkout.session.completed') {
-      const uid = await getUidFromAny(obj);
-      if (!uid) {
-        await db.ref(`__debug/webhook_error`).set({ at: Date.now(), code:'no_uid_checkout_completed' });
-        return res.status(200).json({ ok: true, note: 'no_uid' });
+      const ident = await getIdentity(obj);
+      if (!ident.uid && !ident.email) {
+        await db.ref(`__debug/webhook_error`).set({ at: Date.now(), code:'no_identity_checkout_completed' });
+        return res.status(200).json({ ok: true, note: 'no_uid_or_email' });
       }
-
-      if (obj.customer) await db.ref(`customers/${obj.customer}`).set(uid);
 
       let priceId, periodEnd;
       try {
@@ -105,26 +116,26 @@ export default async function handler(req, res) {
       }
 
       const plan = obj.metadata?.plan || mapPriceToPlan(priceId);
-      await upsertSub(db, uid, true, plan, { current_period_end: periodEnd || null });
+      await upsertSub(db, ident, true, plan, { current_period_end: periodEnd || null });
       return res.status(200).json({ ok: true });
     }
 
     if (type === 'customer.subscription.created' || type === 'customer.subscription.updated') {
-      const uid = await getUidFromAny(obj);
-      if (!uid) return res.status(200).json({ ok: true, note: 'no_uid' });
+      const ident = await getIdentity(obj);
+      if (!ident.uid && !ident.email) return res.status(200).json({ ok: true, note: 'no_identity' });
 
       const priceId = obj.items?.data?.[0]?.price?.id || obj.plan?.id;
       const plan = obj.metadata?.plan || mapPriceToPlan(priceId);
       const periodEnd = obj.current_period_end ? obj.current_period_end * 1000 : null;
 
-      await upsertSub(db, uid, obj.status === 'active' || obj.status === 'trialing', plan, { current_period_end: periodEnd });
+      await upsertSub(db, ident, obj.status === 'active' || obj.status === 'trialing', plan, { current_period_end: periodEnd });
       return res.status(200).json({ ok: true });
     }
 
     if (type === 'customer.subscription.deleted' || type === 'invoice.payment_failed') {
-      const uid = await getUidFromAny(obj);
-      if (!uid) return res.status(200).json({ ok: true, note: 'no_uid' });
-      await upsertSub(db, uid, false, 'starter');
+      const ident = await getIdentity(obj);
+      if (!ident.uid && !ident.email) return res.status(200).json({ ok: true, note: 'no_identity' });
+      await upsertSub(db, ident, false, 'starter');
       return res.status(200).json({ ok: true });
     }
 
