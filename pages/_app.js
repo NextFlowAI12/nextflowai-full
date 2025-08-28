@@ -1,6 +1,6 @@
-import '../styles/home-pro.css';
-import '../styles/onboarding.css';
-
+// pages/_app.js
+import '../styles/home.css';   
 export default function MyApp({ Component, pageProps }) {
   return <Component {...pageProps} />;
 }
+
